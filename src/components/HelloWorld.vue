@@ -1,59 +1,127 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-pwa" target="_blank" rel="noopener">pwa</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+    <b-container fluid>
+      <b-row align-h="center">
+        <b-col cols="8">
+          <b-form inline>
+            <b-input-group class="mb-2 mr-sm-2 mb-sm-0">
+              <b-input v-model="codigo" placeholder="Código" />
+            </b-input-group>
+
+            <b-input-group class="mb-2 mr-sm-2 mb-sm-0">
+              <b-input v-model="interior" placeholder="Interior" type="number" />
+            </b-input-group>
+            <b-input-group class="mb-2 mr-sm-2 mb-sm-0">
+              <b-input v-model="exterior" placeholder="Exterior" type="number" />
+            </b-input-group>
+            <b-input-group class="mb-2 mr-sm-2 mb-sm-0">
+              <b-input v-model="altura" placeholder="Altura" type="number" />
+            </b-input-group>
+            <b-button @click="getRetenes" variant="primary">Buscar</b-button>
+          </b-form>
+        </b-col>
+      </b-row>
+      <br><br>
+      <b-row align-h="center">
+        <b-col md="8">
+          <b-table v-if="retenes.length > 0" responsive striped hover :fields="campos" :items="retenes"></b-table>
+          <p v-if="noExiste">No se encontró ningún artículo con esas especificaciones</p>
+        </b-col>
+      </b-row>
+    </b-container>
 </template>
 
 <script>
+import { buscar } from '../functions/buscar'
+
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
+  data () {
+    return {
+      noExiste: false,
+      codigo: '',
+      altura: '',
+      exterior: '',
+      interior: '',
+      retenes: [],
+      campos: [
+        'Articulo',
+        "Marca",
+        {
+          key: "Diseno",
+          label: "Diseño"
+        },
+        {
+          key: 'Aplicacion',
+          label: 'Aplicación'
+        },
+        'Interior',
+        'Exterior',
+        'Altura',
+      ]
+    }
+  },
+  watch: {
+    codigo () {
+      this.altura = ''
+      this.exterior = ''
+      this.interior = ''
+    },
+    altura () {
+      this.codigo = ''
+    },
+    exterior () {
+      this.codigo = ''
+    },
+    interior () {
+      this.codigo = ''
+    }
+  },
+  methods: {
+    async getRetenes () {
+      this.noExiste = false
+      this.retenes = []
+      let retenes = await buscar(this.codigo, this.altura, this.exterior, this.interior)
+      if (retenes.length < 1) {
+        this.noExiste = true
+        return
+      }
+      retenes.forEach(ret => {
+        if (ret["Altura"].length > 1) {
+          ret["Altura"] = ret["Altura"][0] + " / " + ret["Altura"][1]
+        }
+        if (ret["Exterior"].length > 1) {
+          ret["Exterior"] = ret["Exterior"][0] + " / " + ret["Exterior"][1]
+        }
+        if (ret["Interior"].length > 1) {
+          ret["Interior"] = ret["Interior"][0] + " / " + ret["Interior"][1]
+        }
+        if (ret["Marca"] == undefined) {
+          ret["Marca"] = "WB"
+        }
+        if (ret["ID"] == "C") {
+          ret["Marca"] = "C"
+        }
+        if (ret["ID"] == "A") {
+          ret["Marca"] = "ASH"
+        }
+        if (ret["ID"] == "D") {
+          ret["Marca"] = "DWH"
+        }
+        if (ret["ID"] == "BR") {
+          ret["Marca"] = "BR"
+        }
+        if (ret["ID"] == "NT") {
+          ret["Marca"] = "NT"
+        }
+        if (ret["ID"] == "JT") {
+          ret["Marca"] = "THO"
+        }
+      })
+      this.retenes = retenes
+    }, 
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
 </style>
